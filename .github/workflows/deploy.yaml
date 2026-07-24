@@ -41,18 +41,18 @@ jobs:
       - name: Build Quartz
         id: build
         continue-on-error: true
-        run: npx quartz build -v
+        run: |
+          npx quartz build -v 2>&1 | tee /tmp/build.log
+        shell: bash
 
-      - name: Upload build log on failure
+      - name: Show build error in summary
         if: steps.build.outcome == 'failure'
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-failure-log
-          path: public
-
-      - name: Fail if build failed
-        if: steps.build.outcome == 'failure'
-        run: exit 1
+        run: |
+          echo '## ❌ Build failed. Log:' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat /tmp/build.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          exit 1
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
